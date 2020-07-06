@@ -25,7 +25,7 @@ function runSearch() {
             choices: [
                 "Add Department",
                 "Add Role",
-                "Add Emplyoyee",
+                "Add Employee",
                 "View Departments",
                 "View Roles",
                 "View Employees",
@@ -42,7 +42,7 @@ function runSearch() {
                     addRole();
                     break;
 
-                case "Add Emplyoyee":
+                case "Add Employee":
                     addEmployee();
                     break;
 
@@ -75,19 +75,19 @@ function viewDepartments() {
         if (err) throw err;
         // Log all results of the SELECT statement
         console.log(res);
-        connection.end();
+        runSearch();
     });
-    runSearch();
 };
+
 
 function viewEmployees() {
     connection.query("SELECT * FROM employee", function (err, res) {
         if (err) throw err;
         // Log all results of the SELECT statement
         console.log(res);
-        connection.end();
+        runSearch();
     });
-    runSearch();
+
 };
 
 function viewRoles() {
@@ -95,7 +95,6 @@ function viewRoles() {
         if (err) throw err;
         // Log all results of the SELECT statement
         console.log(res);
-        connection.end();
     });
     runSearch();
 };
@@ -167,7 +166,6 @@ async function addRole() {
     })
 }
 
-
 function addEmployee() {
     inquirer
         .prompt([
@@ -214,17 +212,12 @@ function update() {
     let employees = [];
     let roles = [];
 
-    connection.query("SELECT * FROM employee, role", async (err, answer) => {
+    connection.query("SELECT * FROM employee", async (err, answer) => {
         console.log(answer);
         for (let index = 0; index < answer.length; index++) {
-            employees.push(answer[index].first_name + " " + answer[index].last_name);
+            employees.push(answer[index].first_name + " " + answer[index].last_name + " " + answer[index].id);
         };
-        
 
-        for (let index = 0; index < answer.length; index++) {
-            roles.push(answer[index].title + " " + answer[index].department_id);
-        };
-        
 
         const response = await inquirer
             .prompt([
@@ -240,34 +233,27 @@ function update() {
                     choices: ["manager", "employee"],
                     name: "newrole"
                 }
-                // {
-                //     name: "title",
-                //     type: "list",
-                //     message: "What is the role you would like to update?",
-                //     choices: roles
-                // },
+               
             ])
-            .then(function(answer) {
+            .then(function (answer) {
                 console.log("about to update", answer);
                 const updatedId = {};
-                updatedId.employeeId = parseInt(answer.employeeRoleUpdate.split(" ")[0]);
+                updatedId.employeeId = parseInt(answer.employeeRoleUpdate.split(" ")[2]);
 
                 if (answer.newrole === "manager") {
-                  updatedId.role_id = 1;
+                    updatedId.role_id = 1;
 
                 } else if (answer.newrole === "employee") {
-                  updatedId.role_id = 2;
+                    updatedId.role_id = 2;
                 }
 
                 connection.query(
-                  "UPDATE employee SET role_id = ? WHERE id = ?",
-                  [updatedId.role_id, updatedId.employeeId],
-                  function(err, data) {
-                    runsearch();
-                  }
-                );
+                    "UPDATE employee SET role_id = ? WHERE id = ?",
+                    [updatedId.role_id, updatedId.employeeId],
+                    function (err) {
+                        if (err) throw err;
+                    });
+                    runSearch()
             })
     })
-}
-
-
+};
